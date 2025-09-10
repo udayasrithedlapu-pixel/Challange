@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>The Plant Life Cycle — Dashboard</title>
+<style>
+  /* ---------- Base & Theme ---------- */
+  :root{
+    --lavender:#F3E8FF;        /* pastel lavender background */
+    --card:#FFFFFF;
+    --muted:#6b6b6b;
+    --accent:#6b4fa0;          /* lavender-dark */
+    --accent-2:#9fb8d3;        /* soft blue */
+    --success:#2d8f65;
+    --glass: rgba(255,255,255,0.75);
+    --shadow: 0 6px 18px rgba(24,24,24,0.08);
+    --radius:12px;
+    --max-width:1100px;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: "Lucida Grande","Lucida Sans Unicode","Lucida Sans", "Lucida", Geneva, Verdana, sans-serif;
+    background: linear-gradient(180deg,var(--lavender) 0%, #fff 100%);
+    color:#222;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* ---------- Layout ---------- */
+  .app {
+    max-width: var(--max-width);
+    margin: 28px auto;
+    padding: 20px;
+  }
+
+  header.top {
+    display:flex;
+    gap:20px;
+    align-items:center;
+    justify-content:space-between;
+    background: rgba(255,255,255,0.9);
+    padding:18px 22px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    border-left: 6px solid var(--accent);
+  }
+
+  .brand {
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+
+  .logo {
+    width:56px;height:56px;border-radius:10px;
+    background: linear-gradient(135deg, #a78bff 0%, #7ad7ff 100%);
+    display:flex;align-items:center;justify-content:center;color:white;font-weight:700;
+    box-shadow: 0 6px 18px rgba(107,79,160,0.12);
+  }
+
+  h1 {
+    margin:0;
+    font-size:1.6rem;
+    color:var(--accent);
+    letter-spacing:0.4px;
+  }
+  .subtitle { margin:0;font-size:0.95rem;color:var(--muted) }
+
+  nav ul { list-style:none;padding:0;margin:0;display:flex;gap:8px;align-items:center }
+  nav button {
+    background:transparent;border:0;padding:8px 12px;border-radius:8px;color:var(--accent);
+    cursor:pointer;font-weight:600;
+  }
+  nav button.active {
+    background: linear-gradient(90deg,#efe7ff, #f7fbff);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(107,79,160,0.12);
+  }
+
+  main.content {
+    margin-top:20px;
+    min-height:60vh;
+    display:block;
+  }
+
+  /* ---------- Cards & sections ---------- */
+  .card {
+    background: var(--card);
+    padding:18px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom:18px;
+  }
+
+  .grid {
+    display:grid;
+    grid-template-columns: 1fr 360px;
+    gap:20px;
+  }
+
+  /* ---------- Dashboard specifics ---------- */
+  .controls {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  select, .btn {
+    padding:10px 12px;border-radius:10px;border:1px solid #e6e6e6;background:#fff;
+    font-size:0.95rem;
+  }
+  .btn {
+    cursor:pointer;
+    color:white;background:var(--accent);
+    border: 0;
+    box-shadow: 0 8px 20px rgba(107,79,160,0.12);
+  }
+
+  .stage-list {
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .stage {
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    padding:12px;border-radius:10px;border:1px solid #f0f0f0;
+  }
+  .stage img {
+    width:120px;height:84px;object-fit:cover;border-radius:8px;
+    flex-shrink:0;
+  }
+  .stage h3 { margin:0;font-size:1.05rem;color:#4a3f66 }
+  .stage p { margin:6px 0 0 0;color:#444;font-size:0.92rem;line-height:1.35 }
+
+  /* ---------- Flowchart icon ---------- */
+  .flow-icon {
+    display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:8px;background:linear-gradient(90deg,#fff,#faf7ff);
+    border:1px solid rgba(107,79,160,0.08);cursor:pointer;
+  }
+
+  .flow-icon svg { width:22px;height:22px;color:var(--accent) }
+
+  /* ---------- Flowchart page (vertical) ---------- */
+  .flow-page {
+    display:none;
+    padding:18px;
+  }
+  .vertical-flow {
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    align-items:flex-start;
+    margin:20px 0;
+  }
+  .v-step {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    padding:12px 14px;
+    border-radius:10px;
+    background:linear-gradient(90deg,#fff,#fbfbff);
+    border:1px solid #eee;
+    width:100%;
+    max-width:620px;
+    box-shadow: 0 8px 18px rgba(16,16,24,0.04);
+  }
+  .v-step .dot {
+    width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow: 0 6px 18px rgba(107,79,160,0.12);
+  }
+  .v-step h4 { margin:0 }
+  .v-step p { margin:4px 0 0 0;color:#555;font-size:0.95rem; }
+
+  /* ---------- Pages: Home / About / Help ---------- */
+  .home-hero {
+    display:flex;gap:18px;align-items:center;
+    padding:18px;border-radius:12px;background:linear-gradient(90deg,#ffffff,#fbf7ff);
+  }
+  .home-hero img { width:140px;height:120px;border-radius:12px;object-fit:cover }
+
+  .contacts-list { display:flex;flex-direction:column;gap:10px }
+  .contact-item { display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;border:1px solid #eee;background:#fff }
+  .contact-item .info { font-size:0.95rem;color:#333 }
+  .muted { color:var(--muted);font-size:0.92rem }
+
+  /* responsive */
+  @media (max-width:980px){
+    .grid { grid-template-columns: 1fr; }
+    .brand h1 { font-size:1.25rem }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="top">
+      <div class="brand">
+        <div class="logo">PL</div>
+        <div>
+          <h1>The Plant Life Cycle</h1>
+          <p class="subtitle">An interactive dashboard — from seed to mature plant</p>
+        </div>
+      </div>
+
+      <nav>
+        <ul>
+          <li><button id="nav-home" class="active" onclick="showPage('home')">Home</button></li>
+          <li><button id="nav-dashboard" onclick="showPage('dashboard')">Dashboard</button></li>
+          <li><button id="nav-about" onclick="showPage('about')">About</button></li>
+          <li><button id="nav-help" onclick="showPage('help')">Help</button></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="content">
+      <!-- Home Page -->
+      <section id="page-home" class="card page">
+        <div class="home-hero">
+          <div style="flex:1">
+            <h2>Why plants matter</h2>
+            <p class="muted">
+              Plants are foundational to life on Earth — they produce oxygen, provide food, stabilize ecosystems, and support biodiversity.
+              This dashboard helps learners understand how plants develop from seeds into mature organisms and what they need at each stage.
+            </p>
+            <ul>
+              <li>Produce oxygen via photosynthesis</li>
+              <li>Provide food and habitat</li>
+              <li>Stabilize soils and regulate climate</li>
+            </ul>
+          </div>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Plant_with_roots_and_leaves.jpg" alt="plants">
+        </div>
+      </section>
+
+      <!-- Dashboard Page -->
+      <section id="page-dashboard" class="page" style="display:none;">
+        <div class="grid">
+          <!-- Left column: Main content -->
+          <div>
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <h2 style="margin:0">Dashboard — The Plant Life Cycle</h2>
+                  <p class="muted" style="margin-top:6px">Select a plant to see its conditions and explore each growth stage.</p>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div class="controls">
+                    <label for="plant-select" class="muted" style="font-size:0.92rem">Choose plant:</label>
+                    <select id="plant-select" onchange="onPlantChange()">
+                      <option value="tomato">Tomato (Solanum lycopersicum)</option>
+                      <option value="sunflower">Sunflower (Helianthus annuus)</option>
+                      <option value="oak">Oak (Quercus spp.)</option>
+                      <option value="fern">Fern (Polypodiopsida)</option>
+                    </select>
+                  </div>
+
+                  <div class="flow-icon" title="Open Flowchart" onclick="openFlowPage()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <div style="font-weight:700;color:var(--accent)">Flowchart</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stages detail -->
+            <div class="card">
+              <h3 style="margin-top:0">Stages of the Plant Life Cycle</h3>
+              <div class="stage-list" id="stages-container">
+                <!-- Stages inserted by JS -->
+              </div>
+            </div>
+
+            <!-- Nutrients & sources -->
+            <div class="card">
+              <h3 style="margin-top:0">Nutrients & Common Sources</h3>
+              <p class="muted">Plants need macronutrients & micronutrients. Below are essential nutrients and practical sources.</p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px">
+                <div style="padding:12px;border-radius:10px;background:#fff;border:1px solid #f0f0f0">
+                  <h4 style="margin:0;color:var(--accent)">Nitrogen (N)</h4>
+                  <p class="muted">Function: Leaf and vegetative growth. Sources: compost, manure, blood meal, ammonium nitrate, nitrogen-fixing cover crops (legumes).</p>
+                </div>
+                <div style="padding:12px;border-radius:10px;background:#fff;border:1px solid #f0f0f0">
+                  <h4 style="margin:0;color:var(--accent)">Phosphorus (P)</h4>
+                  <p class="muted">Function: Root development, flowering, fruiting. Sources: rock phosphate, bone meal, compost, superphosphate fertilizers.</p>
+                </div>
+                <div style="padding:12px;border-radius:10px;background:#fff;border:1px solid #f0f0f0">
+                  <h4 style="margin:0;color:var(--accent)">Potassium (K)</h4>
+                  <p class="muted">Function: Fruit quality, disease resistance. Sources: wood ash, kelp/seaweed extracts, potash fertilizers.</p>
+                </div>
+                <div style="padding:12px;border-radius:10px;background:#fff;border:1px solid #f0f0f0">
+                  <h4 style="margin:0;color:var(--accent)">Micronutrients</h4>
+                  <p class="muted">Elements like Fe, Mn, Zn, B, Cu. Sources: foliar sprays, chelated forms, balanced organic fertilizers.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right column: Plant conditions summary -->
+          <aside>
+            <div class="card">
+              <h3 style="margin-top:0">Selected Plant Conditions</h3>
+              <div id="plant-conditions">
+                <!-- populated by JS -->
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 style="margin-top:0">Quick Tips</h3>
+              <ul>
+                <li>Provide consistent watering — avoid waterlogging.</li>
+                <li>Ensure adequate sunlight for the selected species.</li>
+                <li>Use compost and organic matter to improve soil structure.</li>
+                <li>Test soil pH for optimum nutrient availability (most crops prefer pH 6.0–7.0).</li>
+              </ul>
+            </div>
+
+          </aside>
+        </div>
+      </section>
+
+      <!-- Vertical Flowchart Page -->
+      <section id="page-flow" class="card flow-page">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h2 style="margin:0">Plant Life Cycle — Flowchart (Vertical)</h2>
+          <div>
+            <button class="btn" onclick="showPage('dashboard')">Back to Dashboard</button>
+          </div>
+        </div>
+
+        <div class="vertical-flow" id="vertical-flow">
+          <!-- Steps inserted by JS -->
+        </div>
+      </section>
+
+      <!-- About Page -->
+      <section id="page-about" class="card page" style="display:none;">
+        <h2>About this Dashboard</h2>
+        <p class="muted">
+          This interactive dashboard explains the stages of a plant’s life cycle from seed to mature plant, with
+          practical information on development, key nutrients, and recommended sources (organic & inorganic).
+          It is intended for learners, hobby gardeners, and educators.
+        </p>
+        <h3>What you can do here</h3>
+        <ul>
+          <li>Explore each growth stage with images and stage-specific nutrient needs.</li>
+          <li>Select different plant types to view species-specific conditions.</li>
+          <li>Open a vertical flowchart view for teaching or printing.</li>
+        </ul>
+      </section>
+
+      <!-- Help Page -->
+      <section id="page-help" class="card page" style="display:none;">
+        <h2>Help & Contact</h2>
+
+        <p class="muted">
+          If you have questions about plant care, growth stages, or nutrient troubleshooting you can:
+        </p>
+
+        <ol>
+          <li>Use the contact form below to send us your question.</li>
+          <li>Consult local extension services or university botany/agronomy departments (official channels are best).</li>
+        </ol>
+
+        <!-- Contact form (non-functional demo) -->
+        <div style="display:grid;gap:8px;max-width:720px;">
+          <input id="help-name" placeholder="Your name" style="padding:10px;border-radius:8px;border:1px solid #e6e6e6" />
+          <input id="help-email" placeholder="Your email" style="padding:10px;border-radius:8px;border:1px solid #e6e6e6" />
+          <textarea id="help-message" rows="5" placeholder="Your question about plants..." style="padding:10px;border-radius:8px;border:1px solid #e6e6e6"></textarea>
+          <div style="display:flex;gap:12px">
+            <button class="btn" onclick="submitHelp()">Send Question</button>
+            <button onclick="fillExample()" style="padding:10px;border-radius:8px;border:1px solid #e6e6e6;background:#fff;cursor:pointer">Fill Example</button>
+          </div>
+        </div>
+
+        <hr style="margin:18px 0">
+
+        <h3>Contact options (safer alternatives)</h3>
+        <p class="muted">
+          I can't provide private personal phone numbers for individuals. Instead, here are *official* and public channels
+          where you can reach botanists, experts, or extension services:
+        </p>
+
+        <div class="contacts-list">
+          <div class="contact-item">
+            <div>
+              <strong class="info">Local Agricultural Extension Service</strong>
+              <div class="muted">Use your country's agricultural extension website to find local experts and phone numbers.</div>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div>
+              <strong class="info">Royal Botanic Gardens, Kew — Public Enquiry</strong>
+              <div class="muted">Website: <em>Official Kew Gardens contact page (search "Kew contact")</em></div>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div>
+              <strong class="info">University Botany / Plant Science Departments</strong>
+              <div class="muted">Most universities list departmental contact emails and phone numbers on their official websites.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="muted" style="margin-top:12px">
+          If you want, I can fetch official contact pages for major botanical institutions (Kew, Missouri Botanical Garden, local university departments). Tell me which institution and I'll pull publicly-listed contact pages.
+        </p>
+
+      </section>
+
+    </main>
+
+    <footer style="text-align:center;margin-top:18px;color:var(--muted)">
+      © <span id="year"></span> The Plant Life Cycle Dashboard — Educational
+    </footer>
+  </div>
+
+<script>
+  // ---------- Data model ----------
+  const STAGES = [
+    {
+      id: 'seed',
+      title: 'Seed Stage',
+      img: 'https://upload.wikimedia.org/wikipedia/commons/3/37/Bean_Seedling.png',
+      short: 'A seed contains the embryo and food reserves. It must receive water, oxygen & proper temperature to germinate.',
+      detail: `Development: The seed's protective coat softens, water uptake (imbibition) activates enzymes, and the embryo resumes growth.
+Nutrients required/sources: The seed uses stored carbohydrates and proteins; in soil, phosphorus helps root formation. Sources: seed reserves, soil phosphorus (bone meal), compost.`
+    },
+    {
+      id: 'germination',
+      title: 'Germination',
+      img: 'https://upload.wikimedia.org/wikipedia/commons/1/15/Bean_seedling_growth.jpg',
+      short: 'The radicle (first root) emerges and the shoot begins to grow upward.',
+      detail: `Development: Radicle grows downward to form roots; hypocotyl and cotyledons push upward. Environmental triggers include moisture, oxygen, and suitable temperature.
+Nutrients & sources: Water, oxygen; phosphorus for root growth. Sources: moist soil, compost, starter fertilizers with P.`
+    },
+    {
+      id: 'seedling',
+      title: 'Seedling Stage',
+      img: 'https://upload.wikimedia.org/wikipedia/commons/9/9c/Young_tomato_seedling.jpg',
+      short: 'Leaves develop and the plant starts photosynthesis to make its own food.',
+      detail: `Development: True leaves appear and photosynthesis starts. Roots expand to take up water and nutrients.
+Nutrients & sources: Nitrogen is important for leaf development; sources: compost, balanced N fertilizers, organic matter.`
+    },
+    {
+      id: 'growth',
+      title: 'Vegetative Growth',
+      img: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Tree_growth_stages.png',
+      short: 'Rapid growth of stems, leaves and root system.',
+      detail: `Development: Cell division & elongation increase plant size. Root system strengthens; leaf area expands for photosynthesis.
+Nutrients & sources: High nitrogen demand; balanced N-P-K. Sources: compost, well-rotted manure, balanced NPK fertilizers, cover-cropping.`
+    },
+    {
+      id: 'flowering',
+      title: 'Flowering Stage',
+      img: 'https://upload.wikimedia.org/wikipedia/commons/d/d9/Flowering_plant.jpg',
+      short: 'Plant develops flowers for reproduction; later fruit/seed set.',
+      detail: `Development: Flower bud initiation and bloom; pollination leads to fruit/seed formation.
+Nutrients & sources: Phosphorus supports flowering and root development; potassium helps fruit set and quality. Sources: bone meal, rock phosphate, potash, kelp.`
+    },
+    {
+      id: 'mature',
+      title: 'Mature Plant',
+      img: 'https://upload.wikimedia.org/wikipedia/commons/6/6a/Mature_corn_plant.jpg',
+      short: 'Fully developed plant capable of producing seeds/fruit and completing the life cycle.',
+      detail: `Development: Plant reaches full structural development; energy shifts to seed/fruit filling.
+Nutrients & sources: Potassium for fruit quality and disease resistance; continued balanced nutrients and good watering. Sources: compost tea, potassium-rich fertilizers (sulfate of potash), organic mulches.`
+    }
+  ];
+
+  const PLANTS = {
+    tomato: {
+      common: 'Tomato (Solanum lycopersicum)',
+      soil: 'Well-draining loamy soil, pH 6.0–6.8',
+      sunlight: 'Full sun (6–8 hours/day)',
+      water: 'Regular moisture; avoid waterlogging — deep, infrequent watering',
+      nutrients: 'High nitrogen during vegetative stage; higher phosphorus & potassium during flowering/fruiting. Compost, balanced NPK, calcium prevents blossom end rot.',
+      notes: 'Tomatoes benefit from staking, mulching and regular feeding while fruiting.'
+    },
+    sunflower: {
+      common: 'Sunflower (Helianthus annuus)',
+      soil: 'Well-drained soil, tolerates poorer soils; pH 6.0–7.5',
+      sunlight: 'Full sun',
+      water: 'Moderate; drought-tolerant once established',
+      nutrients: 'Moderate nitrogen early; phosphorus for root/flower; potash for seeds. Use compost & potash if flowering is weak.',
+      notes: 'Deep taproot — avoid frequent shallow watering.'
+    },
+    oak: {
+      common: 'Oak (Quercus spp.)',
+      soil: 'Deep, well-draining soils; many oaks tolerate clay; pH varies by species',
+      sunlight: 'Full sun to partial shade',
+      water: 'Young trees need regular watering; mature trees are drought-tolerant',
+      nutrients: 'Slow-growing — benefit from organic matter (leaf mold) and balanced trace elements. Avoid high-N fertilizers which encourage weak growth.',
+      notes: 'Long-lived tree; establish with mulching and protection from competition.'
+    },
+    fern: {
+      common: 'Fern (various species)',
+      soil: 'Rich, humusy, well-draining soil with consistent moisture; slightly acidic to neutral pH',
+      sunlight: 'Shade to partial shade (indirect light)',
+      water: 'Consistently moist soil and higher humidity',
+      nutrients: 'Low to moderate nitrogen; organic matter like leaf mold, compost. Avoid high salts/fertilizer burn.',
+      notes: 'Keep away from direct afternoon sun; maintain humidity for lush fronds.'
+    }
+  };
+
+  // ---------- Initialization ----------
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  function renderStages() {
+    const container = document.getElementById('stages-container');
+    container.innerHTML = '';
+    STAGES.forEach(s => {
+      const el = document.createElement('div');
+      el.className = 'stage';
+      el.innerHTML = `
+        <img src="${s.img}" alt="${escapeHtml(s.title)}">
+        <div>
+          <h3>${escapeHtml(s.title)}</h3>
+          <p>${escapeHtml(s.short)}</p>
+          <p style="margin-top:8px;color:#555"><strong>Details:</strong><br>${escapeHtml(s.detail).replace(/\n/g,'<br>')}</p>
+        </div>
+      `;
+      container.appendChild(el);
+    });
+  }
+
+  function renderPlantConditions(plantKey) {
+    const container = document.getElementById('plant-conditions');
+    const p = PLANTS[plantKey];
+    container.innerHTML = `
+      <div style="font-weight:700;color:var(--accent)">${escapeHtml(p.common)}</div>
+      <div style="margin-top:8px">
+        <div class="muted"><strong>Soil:</strong> ${escapeHtml(p.soil)}</div>
+        <div class="muted"><strong>Sunlight:</strong> ${escapeHtml(p.sunlight)}</div>
+        <div class="muted"><strong>Water:</strong> ${escapeHtml(p.water)}</div>
+        <div class="muted"><strong>Nutrients & sources:</strong> ${escapeHtml(p.nutrients)}</div>
+        <div style="margin-top:8px;color:#444"><strong>Notes:</strong> ${escapeHtml(p.notes)}</div>
+      </div>
+    `;
+  }
+
+  function renderVerticalFlow() {
+    const container = document.getElementById('vertical-flow');
+    container.innerHTML = '';
+    STAGES.forEach((s, idx) => {
+      const step = document.createElement('div');
+      step.className = 'v-step';
+      step.innerHTML = `
+        <div class="dot" aria-hidden="true"></div>
+        <div>
+          <h4>${idx+1}. ${escapeHtml(s.title)}</h4>
+          <p>${escapeHtml(s.short)}</p>
+        </div>
+      `;
+      container.appendChild(step);
+    });
+  }
+
+  // ---------- Navigation ----------
+  function showPage(page) {
+    // Hide all pages
+    const pages = ['home','dashboard','about','help','flow'];
+    pages.forEach(p => {
+      const id = 'page-' + p;
+      const el = document.getElementById(id);
+      if (el) el.style.display = (p === page || (p==='flow' && page==='flow')) ? (p==='flow' ? 'block' : (p==='dashboard' ? 'block' : (p==='home' ? 'block' : 'block'))) : 'none';
+    });
+
+    // Special handling: 'flow' corresponds to page-flow
+    document.getElementById('page-home').style.display = (page==='home')?'block':'none';
+    document.getElementById('page-dashboard').style.display = (page==='dashboard')?'block':'none';
+    document.getElementById('page-about').style.display = (page==='about')?'block':'none';
+    document.getElementById('page-help').style.display = (page==='help')?'block':'none';
+    document.getElementById('page-flow').style.display = (page==='flow')?'block':'none';
+
+    // nav active state
+    ['home','dashboard','about','help'].forEach(n=>{
+      const btn = document.getElementById('nav-'+n);
+      if (btn) btn.classList.toggle('active', (n===page));
+    });
+
+    // If dashboard requested ensure stages & plant conditions rendered
+    if (page==='dashboard') {
+      renderStages();
+      renderPlantConditions(document.getElementById('plant-select').value);
+    }
+    if (page==='flow') {
+      renderVerticalFlow();
+    }
+  }
+
+  function openFlowPage() {
+    showPage('flow');
+    // scroll to top inside flow page
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  // ---------- Plant selection ----------
+  function onPlantChange() {
+    const val = document.getElementById('plant-select').value;
+    renderPlantConditions(val);
+  }
+
+  // ---------- Help form (demo) ----------
+  function submitHelp(){
+    const name = document.getElementById('help-name').value.trim();
+    const email = document.getElementById('help-email').value.trim();
+    const message = document.getElementById('help-message').value.trim();
+    if(!name || !email || !message){
+      alert('Please complete name, email and your question before submitting.');
+      return;
+    }
+    // This demo does not send email. In production you'd POST to a server endpoint.
+    alert('Thank you, ' + name + '! Your question has been received (demo). We recommend contacting your local extension service for detailed local advice.');
+    document.getElementById('help-name').value='';
+    document.getElementById('help-email').value='';
+    document.getElementById('help-message').value='';
+  }
+
+  function fillExample(){
+    document.getElementById('help-name').value='Ananya';
+    document.getElementById('help-email').value='ananya@example.com';
+    document.getElementById('help-message').value='My tomato plants have yellowing lower leaves and small fruit. What nutrient deficiency could cause this?';
+  }
+
+  // ---------- Utilities ----------
+  function escapeHtml(str){
+    if(!str) return '';
+    return String(str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+
+  // ---------- First render ----------
+  (function init(){
+    // Default page is Home (already visible)
+    renderStages();
+    renderPlantConditions(document.getElementById('plant-select').value);
+    renderVerticalFlow();
+  })();
+
+  // Accessibility: keyboard shortcut 'F' opens flowchart
+  document.addEventListener('keydown', (e)=>{
+    if(e.key.toLowerCase()==='f' && (e.ctrlKey || e.metaKey)){
+      openFlowPage();
+      e.preventDefault();
+    }
+  });
+</script>
+</body>
+</html>
